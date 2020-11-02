@@ -1,0 +1,30 @@
+---
+title: "Hausaufgabe 2"
+output: html_notebook
+---
+### Autor: Nga Vu
+
+Load the libraby
+```{r}
+library(tidyverse)
+```
+
+Import Dataframe
+```{r}
+library(readr)
+BX_Book_Ratings <- read_delim("Dataframe/BX-Book-Ratings.csv", 
+    ";", escape_double = FALSE, trim_ws = TRUE)
+```
+```{r}
+library(readr)
+BX_Books <- read_delim("Dataframe/BX-Books.csv", 
+    ";", escape_double = FALSE, trim_ws = TRUE)
+```
+
+```{r}
+publisher <- BX_Books %>% 
+  select(Publisher, ISBN, `Book-Title`) %>% 
+  left_join(BX_Book_Ratings) %>% 
+  view(publisher)
+```
+

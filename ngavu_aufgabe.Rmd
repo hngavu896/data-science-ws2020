@@ -1,0 +1,67 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+### Autor: Nga Vu
+
+Library und Datenframe laden
+```{r}
+library(tidyverse)
+```
+```{r}
+library(readr)
+BX_Book_Ratings <- read_delim("~/UNI/WS20 - R/BX-Book-Ratings.csv", 
+    ";", escape_double = FALSE, trim_ws = TRUE)
+```
+```{r}
+library(readr)
+BX_Books <- read_delim("~/UNI/WS20 - R/BX-Books.csv", 
+    ";", escape_double = FALSE, trim_ws = TRUE)
+```
+
+#### 1.Gibt es eine lineare Beziehung zwischen Anzahl Bücher pro Publisher und Anzahl Ratings, die die Bücher eines Publishers erhalten?
+Esrt müssen wir die Anzahl von Bücher pro Publisher (count) und Anzahl die Ratings pro Publisher erhält (total_rating). 
+(Anzahl Ratings per Buch -> Anzahl Bücher pro Publisher und Anzahl aller Ratings von Bücher pro Publisher)
+
+```{r}
+ratings_per_book <- BX_Book_Ratings %>% 
+  select(-`User-ID`) %>% 
+  group_by(ISBN) %>%
+  summarize(nr_ratings = n())
+```
+```{r}
+publishers <- BX_Books %>% 
+  select(ISBN, `Book-Title`, Publisher) %>% 
+  right_join(ratings_per_book)
+```
+```{r}
+final <- publishers %>% 
+  group_by(Publisher) %>% 
+  summarize(count = n(),
+            total_rating = sum(nr_ratings, na.rm = TRUE)) %>%
+  filter(!is.na(Publisher)) %>% 
+  arrange(desc(total_rating)) %>% 
+  print(final)
+```
+Beziehung zwischen Ratings und Anzahl der Bücher pro Publisher:
+```{r}
+reg <- lm(final$count ~ final$total_rating)
+plot(final$total_rating, final$count)
+abline(reg, col="blue")
+summary(reg)
+```
+
+#### 2.Haben ältere Bücher mehr Ratings, weil sie mehr Zeit haben, um Ratings zu sammeln?
+Erst muss eine Tabelle mit Info über Veröffentlichungsjahr und Anzahl von Ratings erstellt werden
+
+```{r}
+books <- BX_Books %>% 
+  select(ISBN, `Year-Of-Publication`) %>% 
+  left_join(ratings_per_book) %>% 
+  print(books)
+```
+```{r}
+plot(books$`Year-Of-Publication`, books$`nr_ratings`)
+```
+**Wie wir ungefähr schätzen, es ist nicht unbedingt, dass ein älteres Buch mehr Ratings hat, sondern eh die aktuelle Bücher**

@@ -15,33 +15,85 @@ library(readr)
 all <- read_csv("all.csv")
 View(all)
 ```
+### 1. Erstellen Sie eine Analyse, bei der nicht die Bücher, sondern die Autoren in den Transaktionen enthalten sind. 
 
 ```{r}
 authors <- all %>% 
-  select(`User-ID`, ISBN, `Book-Rating`, `Book-Author`)
+  select(`User-ID`,`Book-Author`, `Book-Title`, `Book-Rating`)
 ```
-
-Die Bücher, die die Bewertung NULL sind, werden nicht in der Analyse berücksichtigt, denn die werden noch nicht bewertet. 
 
 ```{r = message = FALSE}
 i <- split(authors$`Book-Author`, authors$`User-ID`)
 txn <- as(i, "transactions")
-rules = apriori(txn, parameter = list(sup = 0.002, conf = 0.8, minlen = 3, maxlen =10, target = "rules"))
+rules = apriori(txn, parameter = list(sup = 0.002, conf = 0.8, minlen = 2, maxlen =10, target = "rules"))
 ```
 
-Rules werden in Tabelle angezeigt
+Ich habe Regel so festgelegt: 
+  - Support = 0.002: der Autor A soll mindesten in 0.2% aller Transaktionen auftauchen, um berücksichtigt zu werden
+  - Confidence = 0.8: es soll 80% der Fällen, der Autor A wird auch gekauft, wenn die verknüpfte Autoren gekauft werden
 
 ```{r}
 myRules <- as(rules, "data.frame")
 rules_hi <- head(rules, by = "lift")
+head(myRules,20)
 ```
 
 ```{r}
-plot(rules[1:20], method = "graph", main = "Authors")
+plot(rules, method = "graph", main = "Authors")
 ```
-Je dünkler die Kreise sind, desto höher die Möglichkeit, dass ein Kunden, der ein Buch 
 
 ```{r}
-plot(rules[1:20], method = "graph", main = "Authors", engine = "interactive")
+plot(rules, method = "graph", main = "Authors", engine = "interactive")
 ```
 
+### 2. Fällt Ihnen etwas in der Datenqualität auf?
+- Die Daten sollen "reinigt" werden, bevor die Assoziation Analyse stattfindet. 
+    - Alle Daten wird nicht in einheitliche Format geschrieben: 
+    z.B {James Patterson,JOHN GRISHAM,Michael Crichton,Tom Clancy} => {John Grisham}: John Grisham und JOHN GRISHAM ist eine Person, aber er wird 2 Mäle gezählt.
+    - Manche Autoren werden unten unterschiedlich Name geschrieben: Zsuzsanna E. Budapest vs Zsuzsanna Budapest
+
+### 3. Wie könnte man das mit regulären Ausdrücken beheben?
+Ich würde alle Daten in groß schreiben. 
+
+### 4. Wie kann man nun noch sicherstellen, dass nur die Autoren weiterempfohlen werden, deren Bücher man auch (mehrheitlich) gut fand?
+
+Man kann die Datenframe vordefinieren:
+- Bücher ohne Bewertungen werden nicht berücksichtigt
+- Die Parameter von Apriori-Fomular spezifizieren
+
+Wir müssen herausfinden, wer sind die gut bewerteten Autoren.
+```{r}
+good_authors <- authors %>% 
+  select(-`User-ID`) %>% 
+  filter(`Book-Rating`>0) %>% 
+  group_by(`Book-Author`) %>% 
+  mutate(avg_rating = mean(`Book-Rating`)) %>% 
+  filter(avg_rating > 8) 
+```
+
+Ich nehme an, dass J. K. Rowling ein gut bewertet Autor ist. Sie hat einen Bewertungdurchschnitt von 8.5. Auf der Parameter "appearence" von Apriori Algorithmus füge ich ein, damit RHS taucht immer J.K.Rowling auf.
+
+(Ich muss die Werte von support und confidence geändert, um gewährzuleisten, dass es doch entsprechende Regeln gibt)
+```{r}
+i <- split(authors$`Book-Author`, authors$`User-ID`)
+txn <- as(i, "transactions")
+rules_good_authors = apriori(txn, parameter = list(sup = 0.002, conf = 0.2, minlen = 2, maxlen =10, target = "rules"),
+                appearance = list(rhs=c("J. K. Rowling")) )
+```
+
+```{r}
+myRules_good_authors <- as(rules_good_authors, "data.frame")
+head(myRules_good_authors,20)
+```
+   
+### 5. Welche anderen Features wären sinnvoll?
+
+Mit diese Assoziation Algorithmus, kann man vorhersagen und empfehlen:
+
+- Kunden, die aus gleicher Länder, können sich für bestimmte Autoren interessieren
+- Kunden, die im gleichen Alter sind, können nur bestimmten Bücher lesen
+    
+    
+    
+    
+    

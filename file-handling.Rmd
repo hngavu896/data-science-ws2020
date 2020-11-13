@@ -17,8 +17,8 @@ rm(BX_Users)
 ratings <- BX_Book_Ratings %>%
   left_join(books)
 rm(BX_Book_Ratings)
-
 ```
+
 ```{r}
 ratings <- ratings %>% 
   filter(!is.na(`Book-Title`))

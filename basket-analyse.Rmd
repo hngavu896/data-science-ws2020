@@ -1,7 +1,9 @@
 ---
-title: "R Notebook"
+title: "Aufgabe von Session 3 - Warenkorb Analyse"
 output: html_notebook
 ---
+
+#### Autor: Nga Vu
 
 Laden Bibliotheke und Daten
 ```{r}

@@ -9,15 +9,11 @@ Library und Datenframe laden
 ```{r}
 library(tidyverse)
 ```
+
 ```{r}
 library(readr)
-BX_Book_Ratings <- read_delim("~/UNI/WS20 - R/BX-Book-Ratings.csv", 
-    ";", escape_double = FALSE, trim_ws = TRUE)
-```
-```{r}
-library(readr)
-BX_Books <- read_delim("~/UNI/WS20 - R/BX-Books.csv", 
-    ";", escape_double = FALSE, trim_ws = TRUE)
+all <- read_csv("~/UNI/WS20 - R/all.csv")
+View(all)
 ```
 
 #### 1.Gibt es eine lineare Beziehung zwischen Anzahl Bücher pro Publisher und Anzahl Ratings, die die Bücher eines Publishers erhalten?
@@ -25,43 +21,49 @@ Esrt müssen wir die Anzahl von Bücher pro Publisher (count) und Anzahl die Rat
 (Anzahl Ratings per Buch -> Anzahl Bücher pro Publisher und Anzahl aller Ratings von Bücher pro Publisher)
 
 ```{r}
-ratings_per_book <- BX_Book_Ratings %>% 
-  select(-`User-ID`) %>% 
-  group_by(ISBN) %>%
-  summarize(nr_ratings = n())
-```
-```{r}
-publishers <- BX_Books %>% 
-  select(ISBN, `Book-Title`, Publisher) %>% 
-  right_join(ratings_per_book)
-```
-```{r}
-final <- publishers %>% 
+ratings_per_publishe <- all %>%
+  filter(`Book-Rating`>0) %>% 
   group_by(Publisher) %>% 
-  summarize(count = n(),
-            total_rating = sum(nr_ratings, na.rm = TRUE)) %>%
-  filter(!is.na(Publisher)) %>% 
-  arrange(desc(total_rating)) %>% 
-  print(final)
+  mutate(nr_rates = n()) %>% 
+  select(Publisher, `Book-Title`, nr_rates) %>% 
+  unique() %>% 
+  mutate(nr_books = n()) %>% 
+  ungroup() %>% 
+  select(nr_books,nr_rates)
+  
 ```
+
+
 Beziehung zwischen Ratings und Anzahl der Bücher pro Publisher:
+
 ```{r}
-reg <- lm(final$count ~ final$total_rating)
-plot(final$total_rating, final$count)
+reg <- lm(ratings_per_publishe$nr_rates ~ ratings_per_publishe$nr_books)
+plot(ratings_per_publishe)
 abline(reg, col="blue")
 summary(reg)
 ```
 
+Die Streuung ist nicht gleichmäßig verteilt, sondern eh großer auf rechte Seite. Es ist logisch, dass man mehr Ratings hat, wenn man mehr Bücher veröffentlich hat, aber die lineare Beziehung ist nicht so stark wie die Zahlen zeigen 
+
 #### 2.Haben ältere Bücher mehr Ratings, weil sie mehr Zeit haben, um Ratings zu sammeln?
-Erst muss eine Tabelle mit Info über Veröffentlichungsjahr und Anzahl von Ratings erstellt werden
+
+Um sinnvoll zu sein, nehmen wir nudie Bücher ein, die zwischen Anfang 90 (weil damals fang der Bewertung-Portal an) bis 2004 (die in Zukunft veröffentlichte Bücher hat keine kreditfähige Bewertungen)
 
 ```{r}
-books <- BX_Books %>% 
+books <- all %>% 
+  filter(`Book-Rating`>0) %>% 
   select(ISBN, `Year-Of-Publication`) %>% 
-  left_join(ratings_per_book) %>% 
-  print(books)
+  filter(`Year-Of-Publication` < 2005) %>% 
+  filter(`Year-Of-Publication` > 1990) %>% 
+  group_by(ISBN) %>% 
+  mutate(Nr_ratings = n()) %>% 
+  ungroup() %>% 
+  mutate(Age = 2004 - `Year-Of-Publication`) %>% 
+  unique() %>% 
+  select(Age, Nr_ratings)
 ```
+
 ```{r}
-plot(books$`Year-Of-Publication`, books$`nr_ratings`)
+plot(books)
 ```
-**Wie wir ungefähr schätzen, es ist nicht unbedingt, dass ein älteres Buch mehr Ratings hat, sondern eh die aktuelle Bücher**
+**Wie wir ungefähr schätzen können, es ist nicht unbedingt, dass ein älteres Buch mehr Ratings hat**

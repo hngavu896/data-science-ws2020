@@ -1,0 +1,47 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Laden Bibliotheke und Daten
+```{r}
+library(tidyverse)
+library(arules)
+library(arulesViz)
+```
+
+```{r}
+library(readr)
+all <- read_csv("all.csv")
+View(all)
+```
+
+```{r}
+authors <- all %>% 
+  select(`User-ID`, ISBN, `Book-Rating`, `Book-Author`)
+```
+
+Die Bücher, die die Bewertung NULL sind, werden nicht in der Analyse berücksichtigt, denn die werden noch nicht bewertet. 
+
+```{r = message = FALSE}
+i <- split(authors$`Book-Author`, authors$`User-ID`)
+txn <- as(i, "transactions")
+rules = apriori(txn, parameter = list(sup = 0.002, conf = 0.8, minlen = 3, maxlen =10, target = "rules"))
+```
+
+Rules werden in Tabelle angezeigt
+
+```{r}
+myRules <- as(rules, "data.frame")
+rules_hi <- head(rules, by = "lift")
+```
+
+```{r}
+plot(rules[1:20], method = "graph", main = "Authors")
+```
+Je dünkler die Kreise sind, desto höher die Möglichkeit, dass ein Kunden, der ein Buch 
+
+```{r}
+plot(rules[1:20], method = "graph", main = "Authors", engine = "interactive")
+```
+

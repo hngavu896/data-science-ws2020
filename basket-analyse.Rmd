@@ -60,10 +60,9 @@ Ich würde alle Namen der Autoren in einheitlichen Format schreiben.
 
 ```{r}
 author_correct <- all %>%
-  select(`Book-Author`) %>%
-  mutate(bereinigt = ifelse(grepl("[A-Z]{2}", `Book-Author`), str_to_title(`Book-Author`),`Book-Author`)) 
+  select(`User-ID`,`Book-Author`, `Book-Title`, `Book-Rating`) %>%
+  mutate(`Book-Author` = ifelse(grepl("[A-Z]{2}", `Book-Author`), str_to_title(`Book-Author`),`Book-Author`))
 ```
-
 
 ### 4. Wie kann man nun noch sicherstellen, dass nur die Autoren weiterempfohlen werden, deren Bücher man auch (mehrheitlich) gut fand?
 
@@ -84,8 +83,10 @@ good_authors <- authors %>%
 Ich nehme an, dass J. K. Rowling ein gut bewertet Autor ist. Sie hat einen Bewertungdurchschnitt von 8.5. Auf der Parameter "appearence" von Apriori Algorithmus füge ich ein, damit RHS taucht immer J.K.Rowling auf.
 
 (Ich muss die Werte von support und confidence geändert, um gewährzuleisten, dass es doch entsprechende Regeln gibt)
+
+Auch diese Frage zu beantworten, nutze ich neue Tabelle mit bereinigten Daten (author_correct)
 ```{r}
-i <- split(authors$`Book-Author`, authors$`User-ID`)
+i <- split(author_correct$`Book-Author`, author_correct$`User-ID`)
 txn <- as(i, "transactions")
 rules_good_authors = apriori(txn, parameter = list(sup = 0.002, conf = 0.2, minlen = 2, maxlen =10, target = "rules"),
                 appearance = list(rhs=c("J. K. Rowling")) )

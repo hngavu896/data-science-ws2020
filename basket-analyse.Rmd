@@ -24,6 +24,7 @@ authors <- all %>%
   select(`User-ID`,`Book-Author`, `Book-Title`, `Book-Rating`)
 ```
 
+
 ```{r = message = FALSE}
 i <- split(authors$`Book-Author`, authors$`User-ID`)
 txn <- as(i, "transactions")
@@ -55,7 +56,14 @@ plot(rules, method = "graph", main = "Authors", engine = "interactive")
     - Manche Autoren werden unten unterschiedlich Name geschrieben: Zsuzsanna E. Budapest vs Zsuzsanna Budapest
 
 ### 3. Wie könnte man das mit regulären Ausdrücken beheben?
-Ich würde alle Daten in groß schreiben. 
+Ich würde alle Namen der Autoren in einheitlichen Format schreiben. 
+
+```{r}
+author_correct <- all %>%
+  select(`Book-Author`) %>%
+  mutate(bereinigt = ifelse(grepl("[A-Z]{2}", `Book-Author`), str_to_title(`Book-Author`),`Book-Author`)) 
+```
+
 
 ### 4. Wie kann man nun noch sicherstellen, dass nur die Autoren weiterempfohlen werden, deren Bücher man auch (mehrheitlich) gut fand?
 

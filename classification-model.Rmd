@@ -1,0 +1,142 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+#### Autor: Nga Vu
+
+```{r}
+library(tidyverse)
+library(e1071)
+library(pROC)
+library(caret)
+```
+
+```{r}
+library(readr)
+titanic <- read_delim("~/UNI/WS20 - R/praxis/data-science-ws2020/titanic.csv", 
+    ";", escape_double = FALSE, trim_ws = TRUE)
+View(titanic)
+```
+
+## Class Imbalance Check
+```{r}
+(df <- titanic %>% 
+  group_by(survived) %>% 
+  summarize(n=n()))
+```
+
+## Meine Hypothese: Wenn man ein Kind oder Eltern hat, ist die Wahrscheilichkeit zu überleben höher
+
+0: ohne Verwandte
+1: mit Verwandte
+```{r}
+df <- titanic %>% 
+   select(pclass,survived,age,parch) %>% 
+   mutate(age = as.numeric(str_replace(age,",","."))) %>%
+   mutate(parch = ifelse(parch>0,1,0))
+```
+
+```{r}
+df <- na.omit(df)
+```
+
+```{r}
+set.seed(896)
+inTrain <- createDataPartition(
+  y = df$survived,
+  p = .8,
+  list = FALSE)
+# Train Data
+tdata <- df[ inTrain,]
+# Validation Data
+vdata <- df[-inTrain,]
+```
+
+### 1. SVM mit mehr als 2 Variable 
+
+```{r}
+model_svm <- svm(survived ~ ., data = tdata)
+summary(model_svm)
+pred1 <- predict(model_svm, vdata, probability = FALSE)
+```
+
+```{r}
+(test.results_svm <- cbind(pred1, vdata))
+```
+
+```{r}
+pROC_obj <- roc(test.results_svm$survived, test.results_svm$pred,
+            smoothed = TRUE,
+            ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+            plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+            print.auc=TRUE, show.thres=TRUE)
+```
+
+### 2. Naive Bayes
+
+```{r}
+naive_tdata <- tdata %>% 
+  mutate(survived = as.factor(survived)) %>%
+  mutate(age = as.factor(age)) %>% 
+  mutate(pclass = as.factor(pclass)) %>% 
+  mutate(parch = as.factor(parch))
+naive_model <- naiveBayes(survived ~., data = naive_tdata)
+naive_model
+```
+Durch Confusion Matrix von Naive Bayer Algorithmus kann man sehen, dass meine Hypothese falsch ist. Die Anzahl der nicht Überlebenden sogar ist höher. 
+
+```{r}
+naive_vdata <- vdata %>%
+  mutate(survived = as.factor(survived)) %>% 
+  mutate(parch = as.factor(parch)) %>%
+  mutate(pclass = as.factor(pclass))%>%
+  mutate(age = as.factor(age))
+pred2 <- predict(naive_model, naive_vdata)
+table(pred2, naive_vdata$survived)
+```
+
+```{r}
+(test.results_naive <- cbind(pred, naive_vdata))
+```
+
+```{r}
+test.results_naive <- test.results_naive %>%
+  mutate(pred = as.numeric(pred))
+pROC_obj <- roc(as.numeric(as.character(test.results_naive$survived)), test.results_naive$pred,
+            smoothed = TRUE,
+            ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+            plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+            print.auc=TRUE, show.thres=TRUE)
+
+```
+
+### 3. Decision Tree
+
+```{r}
+library(rpart)
+library(rpart.plot)
+tree<- rpart(survived~., data = tdata, method = 'class')
+rpart.plot(tree)
+```
+
+```{r}
+pred3 <- predict(tree, vdata, type = 'prob')
+head(test.results_dt <- cbind(vdata,pred3),500)
+```
+
+```{r}
+pROC_obj <- roc(test.results_dt$survived,test.results_dt$`1`,
+            smoothed = TRUE,
+            ci=TRUE, ci.alpha=0.9, stratified=FALSE,
+            plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
+            print.auc=TRUE, show.thres=TRUE)
+```
+
+### Was sind die Unterschiede in der Performance der Algorithmen?
+
+Aus drei Verfahren hat sich SVM die höchsten AUC (0,706) ergeben, dann Decision tree mit AUC bei 0,68 liegt, und am Ende steht Naive Bayer mit AUC = 0,604.
+
+Naive Bayer als Classifier hat alle Faktoren (pclass, age, parch) berücksichtigt und dann prognotiziert es "1" - für Überlebend - oder "0" - für nicht Überlebend.  
+
+SVM und Decision Tree äußern ihre Prognose durch relative Zahl, kann sein deswegen, ist die Korrektheit höher wegen der verringere Abweichung als Naive Bayer.

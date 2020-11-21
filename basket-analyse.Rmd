@@ -21,7 +21,6 @@ all <- read_csv("all.csv")
 ```{r}
 authors <- all %>% 
   select(`User-ID`,`Book-Author`, `Book-Title`, `Book-Rating`)
-rm(all)
 ```
 
 
@@ -64,7 +63,7 @@ author_correct <- all %>%
   mutate(`Book-Author` = ifelse(grepl("[A-Z]{2}", `Book-Author`),
 str_to_title(`Book-Author`),`Book-Author`)) %>% 
   mutate(`Book-Title` = str_replace_all(`Book-Title`, "[^[a-zA-Z0-9, ]]", ""))
-rm(test)
+rm(all)
 ```
 
 Es ist nicht optimal, da alle Umlaut in Dataframe, die bereits nicht gelesen werden, auch gelöscht werden. Alledings finde ich es ist erstmal optimaler als die originale Dataframe
@@ -77,12 +76,13 @@ Man kann die Datenframe vordefinieren:
 
 Wir müssen herausfinden, wer sind die gut bewerteten Autoren.
 ```{r}
-good_authors <- author %>% 
+good_authors <- author_correct %>% 
   select(-`User-ID`) %>% 
   filter(`Book-Rating`>0) %>% 
   group_by(`Book-Author`) %>% 
+  mutate(count=n()) %>% 
   mutate(avg_rating = mean(`Book-Rating`)) %>% 
-  filter(avg_rating > 8) 
+  filter(avg_rating > 8)
 ```
 
 Ich nehme an, dass J. K. Rowling ein gut bewertet Autor ist. Sie hat einen Bewertungdurchschnitt von 8.5. Auf der Parameter "appearence" von Apriori Algorithmus füge ich ein, damit RHS taucht immer J.K.Rowling auf.

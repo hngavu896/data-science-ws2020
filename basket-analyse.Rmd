@@ -60,13 +60,13 @@ Ich würde alle Namen der Autoren in einheitlichen Format schreiben. Es gibt auc
 ```{r}
 author_correct <- all %>%
   select(`User-ID`,`Book-Author`, `Book-Title`, `Book-Rating`) %>%
-  mutate(`Book-Author` = ifelse(grepl("[A-Z]{2}", `Book-Author`),
-str_to_title(`Book-Author`),`Book-Author`)) %>% 
-  mutate(`Book-Title` = str_replace_all(`Book-Title`, "[^[a-zA-Z0-9, ]]", ""))
+  mutate(`Book-Author` = ifelse(grepl("[A-Z]{2}", `Book-Author`), str_to_title(`Book-Author`), `Book-Author`)) %>% 
+  mutate(`Book-Title` = str_replace_all(`Book-Title`, "[^[a-zA-Z0-9, ]]", "")) %>% 
+  mutate(`Book-Title` = str_to_title(`Book-Title`))
 rm(all)
 ```
 
-Es ist nicht optimal, da alle Umlaut in Dataframe, die bereits nicht gelesen werden, auch gelöscht werden. Alledings finde ich es ist erstmal optimaler als die originale Dataframe
+Es ist nicht optimal, da alle Umlaut in Dataframe, die bereits nicht gelesen werden, auch gelöscht werden. Alledings finde ich es ist erstmal "besser" als die originale Dataframe
 
 ### 4. Wie kann man nun noch sicherstellen, dass nur die Autoren weiterempfohlen werden, deren Bücher man auch (mehrheitlich) gut fand?
 

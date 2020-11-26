@@ -21,7 +21,7 @@ Data reinigen und auswählen:
 user_book <- all %>% 
   group_by(`Book-Title`) %>% 
   mutate(count = n()) %>% 
-  filter(count > 99) %>% 
+  filter(count > 499) %>% 
   filter(`Book-Rating` > 9) %>% 
   select(`User-ID`, `Book-Title`) %>% 
   unique()
@@ -73,7 +73,6 @@ result1 <- book_matrix %>%
 #### K-Means Clustering:
 
 ```{r}
-set.seed(1234)
 k.means.fit <- kmeans(book_matrix, 3)
 ```
 
@@ -89,5 +88,3 @@ result2 <- result2 %>%
 clusplot(book_matrix, k.means.fit$cluster, color=TRUE, shade=TRUE,
 labels=4, lines=0, main="K-means cluster plot")
 ```
-
-Leider bekomme ich immer Fehlermeldung, wenn ich Plot für K-Means Clustering erstelle

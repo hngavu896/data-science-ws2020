@@ -15,20 +15,22 @@ library(cluster)
 library(readr)
 all <- read_csv("all.csv")
 ```
-Data reinigen und auswählen:
+Data reinigen, auswählen und Dummy Data erstellen:
 
 ```{r}
 user_book <- all %>% 
   group_by(`Book-Title`) %>% 
   mutate(count = n()) %>% 
-  filter(count > 499) %>% 
-  filter(`Book-Rating` > 9) %>% 
+  filter(count > 199) %>% 
+  filter(`Book-Rating` > 9)%>% 
   select(`User-ID`, `Book-Title`) %>% 
   unique()
 
 book_matrix <- user_book %>% 
   mutate(i=1) %>% 
   spread(`Book-Title`, i, fill = 0)
+# Anmerkung:
+# Soll die "User-ID" Spalte entfernt werden, weil die Werte bei User-ID ist keinen Merkmale zum clustern, sondern zum Identifizieren der User?
 ```
 
 ```{r}
@@ -47,9 +49,10 @@ book.dist <- dist(book_matrix, method = "euclidean")
 
 ```{r}
 wss <- (nrow(book_matrix)-1)*sum(apply(book_matrix,2,var))
-  for (i in 2:10) wss[i] <- sum(kmeans(book_matrix, centers = i)$withinss)
-
-plot(1:10, wss, type = "b", xlab = "Number of Clusters", ylab = "WSS")
+  for (i in 2:10) wss[i] <- sum(kmeans(book_matrix,
+                                       centers=i)$withinss)
+plot(1:10, wss, type="b", xlab="Number of Clusters",
+     ylab="Within groups sum of squares")
 ```
 
 Wir nehmen k = 2, da ab 2 Clusters gibt es keine größe Unterschied der Varianz innerhalb eines Clusters
@@ -77,14 +80,14 @@ k.means.fit <- kmeans(book_matrix, 3)
 ```
 
 ```{r}
+clusplot(book_matrix, k.means.fit$cluster, color=TRUE, shade=TRUE,
+labels=4, lines=0, main="K-means cluster plot")
+```
+
+```{r}
 # Join user_book Tabelle, um zu wissen, welches Buch gehört zu welchem Cluster
 result2 <- as.data.frame(cbind(book_matrix$`User-ID`,k.means.fit$cluster))
 result2 <- result2 %>% 
   left_join(user_book, by= c("V1"="User-ID"))
   
-```
-
-```{r}
-clusplot(book_matrix, k.means.fit$cluster, color=TRUE, shade=TRUE,
-labels=4, lines=0, main="K-means cluster plot")
 ```

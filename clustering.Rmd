@@ -61,8 +61,8 @@ Wir nehmen k = 2, da ab 2 Clusters gibt es keine größe Unterschied der Varianz
 ```{r}
 book.hc <- hclust(book.dist, method = "ward.D2")
 plot(book.hc)
-class <- cutree(book.hc, k = 3)
-rect.hclust(book.hc, k=3, border = "blue")
+class <- cutree(book.hc, k = 2)
+rect.hclust(book.hc, k=2, border = "blue")
 ```
 
 ```{r}
@@ -76,7 +76,7 @@ result1 <- book_matrix %>%
 #### K-Means Clustering:
 
 ```{r}
-k.means.fit <- kmeans(book_matrix, 3)
+k.means.fit <- kmeans(book_matrix, 2)
 ```
 
 ```{r}

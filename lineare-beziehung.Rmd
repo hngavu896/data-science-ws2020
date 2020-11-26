@@ -46,23 +46,22 @@ Die Streuung ist nicht gleichmäßig verteilt, sondern eh großer auf rechte Sei
 
 #### 2.Haben ältere Bücher mehr Ratings, weil sie mehr Zeit haben, um Ratings zu sammeln?
 
-Um sinnvoll zu sein, nehmen wir nudie Bücher ein, die zwischen Anfang 90 (weil damals fang der Bewertung-Portal an) bis 2004 (die in Zukunft veröffentlichte Bücher hat keine kreditfähige Bewertungen)
+Um sinnvoll zu sein, nehmen wir nur die Bücher ein, die nicht sehr alt sind (ab 2000) und aktuelle schon veröffentlicht werden. Die in Zukunft veröffentlichte Bücher bekommen bis jetzt keine kreditfähige Bewertungen
 
 ```{r}
 books <- all %>% 
   filter(`Book-Rating`>0) %>% 
   select(ISBN, `Year-Of-Publication`) %>% 
-  filter(`Year-Of-Publication` < 2005) %>% 
-  filter(`Year-Of-Publication` > 1990) %>% 
+  filter(`Year-Of-Publication` <= 2020) %>% 
+  filter(`Year-Of-Publication` > 1990) %>%
+  mutate(Age = 2020 - `Year-Of-Publication`) %>% 
   group_by(ISBN) %>% 
   mutate(Nr_ratings = n()) %>% 
-  ungroup() %>% 
-  mutate(Age = 2004 - `Year-Of-Publication`) %>% 
-  unique() %>% 
-  select(Age, Nr_ratings)
+  filter(Nr_ratings > 10) %>% 
+  unique()
 ```
 
 ```{r}
-plot(books)
+plot(books$Age, books$Nr_ratings)
 ```
 **Wie wir ungefähr schätzen können, es ist nicht unbedingt, dass ein älteres Buch mehr Ratings hat**

@@ -14,9 +14,8 @@ library(caret)
 
 ```{r}
 library(readr)
-titanic <- read_delim("~/UNI/WS20 - R/praxis/data-science-ws2020/titanic.csv", 
+titanic <- read_delim("~/UNI/WS20 - R/praxis/rep-hr-alby/data-science-ws-2020/titanic.csv", 
     ";", escape_double = FALSE, trim_ws = TRUE)
-View(titanic)
 ```
 
 ## Class Imbalance Check
@@ -33,6 +32,7 @@ View(titanic)
 ```{r}
 df <- titanic %>% 
    select(pclass,survived,age,parch) %>% 
+   mutate(survived = as.factor(survived)) %>% 
    mutate(age = as.numeric(str_replace(age,",","."))) %>%
    mutate(parch = ifelse(parch>0,1,0))
 ```
@@ -56,9 +56,9 @@ vdata <- df[-inTrain,]
 ### 1. SVM mit mehr als 2 Variable 
 
 ```{r}
-model_svm <- svm(survived ~ ., data = tdata)
+model_svm <- svm(survived ~ ., data = tdata, probability = TRUE)
 summary(model_svm)
-pred1 <- predict(model_svm, vdata, probability = FALSE)
+pred1 <- predict(model_svm, vdata, probability = TRUE)
 ```
 
 ```{r}
@@ -66,11 +66,23 @@ pred1 <- predict(model_svm, vdata, probability = FALSE)
 ```
 
 ```{r}
-pROC_obj <- roc(test.results_svm$survived, test.results_svm$pred,
+head(attr(pred1, "probabilities"))
+```
+
+```{r}
+confusionMatrix(pred1,vdata$survived)
+```
+
+```{r}
+pROC_obj <- roc(test.results_svm$survived, test.results_svm$pred1,
             smoothed = TRUE,
             ci=TRUE, ci.alpha=0.9, stratified=FALSE,
             plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE,
             print.auc=TRUE, show.thres=TRUE)
+```
+
+```{r}
+saveRDS(model_svm, "./titanic.svm.rds")
 ```
 
 ### 2. Naive Bayes

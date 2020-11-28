@@ -1,0 +1,81 @@
+---
+title: "1. Session"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+### Autor: Le Hanh Nga Vu
+
+# Library laden 
+```{r}
+library(tidyverse)
+```
+
+#Dataset laden - "Import Dataset.." kopieren oder direkt importieren
+
+Wir brauchen nicht alle Spalten in allen Tabellen, deswegen suchen wir nur die nötige Spalten aus und damit eine neue Tabelle erstellen. Wir müssen wissen: ISBN, Title, Publisher & Author
+```{r}
+books <- BX_Books %>%
+  select(ISBN, `Book-Title`, `Book-Author`, Publisher)
+
+```
+
+Wir verbinden die Tabelle Book_Rating auch dazu
+```{r}
+ratings <- BX_Book_Ratings %>%
+  left_join(books)
+```
+
+
+### 1. Welche Bücher sind am besten bewertet?
+Die Bücher werden nach Rating sortiert und dadurch herausfinden, welche am besten besten bewertet werden (Rating = 10)
+```{r}
+ratings %>%
+  group_by(`ISBN`) %>%
+  filter(`Book-Rating` == 10) %>%
+  select(`Book-Rating`, ISBN, `Book-Title`)
+```
+
+### 2. Sollte die Anzahl der Bewertung auch mit reinspielen?
+
+Ja, natürlich. Der Durchschnitt allen Bewertungen ist mehr aussagekräftiger, ob das Buch gut oder schlect ist. 
+```{r}
+ratings %>%
+  group_by(ISBN) %>%
+  summarise(durchschnitt = mean(`Book-Rating`), anzahl = n()) %>%
+  arrange(desc(anzahl))
+```
+
+### 3. Welche Autoren sind am besten bewertet?
+
+Um herauszufinden, welche Autoren am besten bewertet sind, wenden wir die gleiche Methode wie in der 2. Aufgabe:
+
+Erstelle new Taballe für Autoren
+```{r}
+author <- BX_Books %>%
+  select(ISBN, `Book-Author`)
+```
+
+```{r}
+author <- right_join(author, BX_Book_Ratings, by = "ISBN")
+```
+
+Welche Autoren, die eine durchschnittliche Bewertung aller seinen Büche von 10 haben, sind die am besten bewerten
+```{r}
+author %>%
+  group_by(`Book-Author`) %>%
+  summarise(anzahl = n(), durchschnitt = mean(`Book-Rating`)) %>%
+  filter(durchschnitt == 10)
+```
+
+### 4. Welche Verlag hat die besten Bücher
+
+Derselbe Methode wie in oberer Aufgabe, aber noch eine Schritt dazu: die Statistik zahlt nur den Verlag, der mehr als 10 Publikationen hat.
+```{r}
+ratings %>%
+  group_by(Publisher) %>%
+  summarise(anzahl = n(), durchschnitt = mean (`Book-Rating`)) %>%
+  filter(anzahl > 10) %>%
+  arrange(desc(durchschnitt))
+```
+

@@ -1,0 +1,13 @@
+name: data-science-ws2020
+title: data-science-ws2020
+username:
+account: lh-nga-vu
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3314934
+bundleId: 3915847
+url: https://lh-nga-vu.shinyapps.io/data-science-ws2020/
+when: 1606567031.47783
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|all.csv|basket-analyse.Rmd|classification-model.Rmd|clustering.nb.html|clustering.Rmd|file-handling.Rmd|lineare-beziehung.Rmd|README.md|titanic.csv
